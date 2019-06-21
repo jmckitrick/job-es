@@ -1,0 +1,285 @@
+# -*- restclient -*-
+
+# Create an index
+PUT http://localhost:8000/booking?pretty
+
+# Version check
+GET http://localhost:8000
+
+# Health check
+GET http://localhost:8000/_cat/health?v
+
+# Health check
+GET http://localhost:8000/_cat/indices
+
+# Search lite
+GET http://localhost:8000/booking/_search?q=tiffany&pretty
+
+# Search lite
+GET http://localhost:8000/booking/_search?q=seoul
+
+# Search lite to get all entries
+GET http://localhost:8000/booking/_search?q=*&pretty
+
+# Search using JSON body and match_all
+GET http://localhost:8000/booking/_search
+Content-Type: application/json
+
+{
+ "query":
+  {
+   "match_all":
+   {
+   }
+  }
+}
+
+# Add a booking to the index
+POST http://localhost:8000/booking/_doc?pretty
+Content-Type: application/json
+
+{
+  "product":"cruise",
+  "adapter":"Softvoyage",
+  "agent":"dave.lovely@tstllc.net",
+  "ref_conf_number":"4321XYZ",
+  "fname":"Jared",
+  "lname":"Rowland",
+  "phone":"6095551212",
+  "email":"bigtimejr81@gmail.com",
+  "itinerary":"Seoul tour",
+  "branch":"HQ",
+  "licensee":1
+}
+
+# Searching with MATCH
+GET http://localhost:8000/booking/_search
+Content-Type: application/json
+
+{
+	"query": {"match": {"all_fields": "jon"} }
+
+}
+
+# Searching with MATCH and more fields
+GET http://localhost:8000/booking/_search
+Content-Type: application/json
+
+{
+ "query": {
+  "match": {
+   "_all": "jon"
+   }
+  }
+}
+
+# Add a booking at index 2
+PUT http://localhost:8000/booking/_doc/2?pretty
+Content-Type: application/json
+
+{
+  "product":"cruise",
+  "adapter":"Softvoyage",
+  "agent":"dave.lovely@tstllc.net",
+  "ref_conf_number":"1234ABCD",
+  "fname":"Jonathon",
+  "lname":"McKitrick",
+  "phone":"6095551212",
+  "email":"jonathon.mckitrick+ES123@tstllc.net",
+  "itinerary":"European Cruise ABC",
+  "branch":"HQ",
+  "licensee":1
+}
+
+# Get a booking at index 1
+GET http://localhost:8000/booking/_doc/1?pretty
+
+# Search with MULTI MATCH
+GET http://localhost:8000/booking/_search
+Content-Type: application/json
+
+{
+ "query": {
+  "multi_match": {
+   "query": "mckitrick tstllc.net",
+   "fields": ["email"]
+  }
+ }
+}
+
+# Search with WILDCARDS
+POST http://localhost:8000/booking/_search
+Content-Type: application/json
+
+{
+ "query":
+  {
+    "wildcard":
+    {
+     "email": "*jonathan*"
+    }
+  }
+}
+
+# Bulk create
+POST http://localhost:8000/booking/_doc/_bulk
+Content-Type: application/x-ndjson
+
+{"index": {"_id": 10}}
+{"product":"cruise", "adapter":"Softvoyage", "agent":"dave.lovely@tstllc.net", "ref_conf_number":"1234ABCD", "fname":"Marsha", "lname":"Rowland", "phone":"6095551212", "email":"marsha.rowland@gmail.com", "itinerary":"Island Cruise UPDATED", "branch":"HQ", "licensee":1}
+
+# DELETE an entire index
+DELETE http://localhost:8000/booking
+
+# ADD A MAPPING FOR ALL
+PUT http://localhost:8000/booking2
+Content-Type: application/json
+
+{
+ "mappings": {
+ "_doc": {
+   "properties": {
+    "product": {
+     "type": "text",
+     "copy_to": "all_fields"
+    },
+    "adapter": {
+     "type": "text",
+     "copy_to": "all_fields"
+    },
+    "agent": {
+     "type": "text",
+     "copy_to": "all_fields"
+    },
+    "ref_conf_number": {
+     "type": "text",
+     "copy_to": "all_fields"
+    },
+    "fname": {
+     "type": "text",
+     "copy_to": "all_fields"
+    },
+    "lname": {
+     "type": "text",
+     "copy_to": "all_fields"
+    },
+    "phone": {
+     "type": "text",
+     "copy_to": "all_fields"
+    },
+    "email": {
+     "type": "text",
+     "copy_to": "all_fields"
+    },
+    "itinerary": {
+     "type": "text",
+     "copy_to": "all_fields"
+    },
+    "branch": {
+     "type": "text",
+     "copy_to": "all_fields"
+    }
+   }
+  }
+ }
+}
+
+# Add a booking to the index TWO
+POST http://localhost:8000/booking2/_doc?pretty
+Content-Type: application/json
+
+{
+  "product":"cruise",
+  "adapter":"Softvoyage",
+  "agent":"dave.lovely@tstllc.net",
+  "ref_conf_number":"4321XYZ",
+  "fname":"Jared",
+  "lname":"Rowland",
+  "phone":"6095551212",
+  "email":"bigtimejr81@gmail.com",
+  "itinerary":"Seoul tour",
+  "branch":"HQ",
+  "licensee":1
+}
+
+
+# NEW ENDPOINT IN ADMIN
+GET http://localhost:9000/admin/bookings/quicksearch?target=tiffany
+
+# REINDEX
+POST http://localhost:8000/_reindex
+{
+  "source": {
+    "index": "booking"
+  },
+  "dest": {
+    "index": "booking2"
+  }
+}
+
+# ADD A MAPPING FOR _ALL
+PUT http://localhost:8000/booking/_mapping/_doc
+Content-Type: application/json
+
+{
+   "properties": {
+    "product": {
+     "type": "text",
+     "copy_to": "all_fields"
+    },
+    "adapter": {
+     "type": "text",
+     "copy_to": "all_fields"
+    },
+    "agent": {
+     "type": "text",
+     "copy_to": "all_fields"
+    },
+    "ref_conf_number": {
+     "type": "text",
+     "copy_to": "all_fields"
+    },
+    "fname": {
+     "type": "text",
+     "copy_to": "all_fields"
+    },
+    "lname": {
+     "type": "text",
+     "copy_to": "all_fields"
+    },
+    "phone": {
+     "type": "text",
+     "copy_to": "all_fields"
+    },
+    "email": {
+     "type": "text",
+     "copy_to": "all_fields"
+    },
+    "itinerary": {
+     "type": "text",
+     "copy_to": "all_fields"
+    },
+    "branch": {
+     "type": "text",
+     "copy_to": "all_fields"
+    }
+   }
+}
+
+# DELETE an entire index
+DELETE http://localhost:8000/booking2
+
+
+# ADD A MAPPING FOR _ALL - ERROR?
+PUT http://localhost:8000/booking2
+Content-Type: application/json
+
+{
+ "mapping": {
+  "_doc": {
+   "_all": {
+    "enabled": true
+   }
+  }
+ }
+}
