@@ -25,33 +25,27 @@
 
 (def c (s/client {:hosts ["http://localhost:8000"]}))
 
-(defn my-search []
-  (s/request c {:url [:booking :_search ]
-                :method :get
-                :body {:query {:match_all {}}}}))
-
-(defn add-to-index [{:keys [:id :fname :phone :branch :product :agent :email
-                            :adapter :lname :subsite_agent_name :ref_conf_number :itinerary] :as row}]
-  (s/request c {:url [:booking :_doc id]
-                :method :put
-                :body row}))
+(defn get-booking-type [row]
+  (cond
+    (and (not-empty (:agent row))
+         (empty? (:subsite row))) "agent"
+    (and (not-empty (:subsite row))
+         (empty? (:agent row))) "personal subsite"
+    :else "web"))
 
 (defn add-to-index-bulk-async [rows]
   (let [{:keys [input-ch output-ch]} (s/bulk-chan c {:flush-threshold 100
                                                      :flush-interval 5000
                                                      :max-concurrent-requests 1000})]
-    ;; WORKING with 10000 rows 100 5000 100
     (doseq [row-set (partition-all 1000 rows)]
-      (println (count row-set))
       (doseq [idx (range 0 (count row-set))]
-        ;;(println idx)
-        (let [row (nth row-set idx)]
-          (async/put! input-ch [{:index {:_index :booking :_type :_doc :_id (:id row)}} row]))))
+        (let [row (nth row-set idx)
+              ready-row (assoc row :type (get-booking-type row))]
+          (async/>!! input-ch [{:index {:_index :booking :_type :_doc :_id (:id row)}} ready-row]))))
     (future (loop [] (async/<!! output-ch)))))
 
 (defn -main []
   (let [bookings (get-travel-bookings)]
     (println "Bookings: " (count bookings))
-    #_(doseq [booking bookings]
-        (add-to-index booking))
+    #_(println "Bookings: " bookings)
     (add-to-index-bulk-async bookings)))

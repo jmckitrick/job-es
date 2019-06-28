@@ -9,11 +9,11 @@ GET http://localhost:8000
 # Health check
 GET http://localhost:8000/_cat/health?v
 
-# Health check
+# List indices
 GET http://localhost:8000/_cat/indices
 
 # Search lite
-GET http://localhost:8000/booking/_search?q=tiffany&pretty
+GET http://localhost:8000/booking/_search?q=john*
 
 # Search lite
 GET http://localhost:8000/booking/_search?q=seoul
@@ -34,6 +34,215 @@ Content-Type: application/json
   }
 }
 
+# Search using JSON body with match_all and filter
+GET http://localhost:8000/booking/_search
+Content-Type: application/json
+
+{
+ "query": {
+  "bool": {
+   "must": [
+    { "match_all": {} }
+ ],
+ "filter": {
+  "term": {
+   "email": "jon"
+  }
+ }
+ }
+ }
+}
+
+# Searching with MATCH
+# Will only match 'jon' emails, not 'jonathon', e.g.
+GET http://localhost:8000/booking/_search
+Content-Type: application/json
+
+{
+ "query": {
+  "match": {
+   "email": "jon"
+   }
+  }
+}
+
+# Searching with MATCH and HIGHLIGHT
+# This only matches 'jon' in email,
+# but shows where the match was found.
+GET http://localhost:8000/booking/_search
+Content-Type: application/json
+
+{
+ "query": {
+  "match": {
+   "email": "jon"
+   }
+  },
+  "highlight": {
+   "fields": {
+    "email": {}
+   }
+  }
+}
+
+# Searching with MULTI-MATCH and HIGHLIGHT
+# Matches email, first and last name,
+# and highlights which was the match.
+GET http://localhost:8000/booking/_search
+Content-Type: application/json
+
+{
+ "query": {
+  "multi_match": {
+   "fields": ["email", "*name", "agent"],
+   "query": "john"
+   }
+  },
+  "highlight": {
+   "fields": {
+    "email": {},
+    "fname": {},
+    "lname": {}
+   }
+  }
+}
+
+# Searching the manually configured 'catch_all' with MATCH
+# This requires special setup on the bookings index.
+GET http://localhost:8000/booking/_search
+Content-Type: application/json
+
+{
+	"query": {"match": {"catch_all": "jon"} }
+
+}
+
+# Searching with NAMED BOOL QUERY
+GET http://localhost:8000/booking/_search
+Content-Type: application/json
+
+{
+ "query": {
+  "bool": {
+   "should": [
+   { "match": {"agent": {"query": "john", "_name": "agent-MATCH" }}},
+   { "match": {"email": {"query": "john", "_name": "email-MATCH" }}},
+   { "match": {"fname": {"query": "john", "_name": "fname-MATCH" }}},
+   { "match": {"lname": {"query": "john", "_name": "lname-MATCH" }}}
+   ]
+  }
+ }
+}
+
+# Search with MULTI MATCH
+GET http://localhost:8000/booking/_search
+Content-Type: application/json
+
+{
+ "query": {
+  "multi_match": {
+   "query": "john",
+   "fields": ["email","*name","agent"]
+  }
+ }
+}
+
+# Search with MULTI MATCH and FILTER
+GET http://localhost:8000/booking/_search
+Content-Type: application/json
+
+{
+ "query": {
+  "bool": {
+   "must": {
+    "multi_match": {
+     "query": "john",
+     "fields": ["email","*name","agent"]
+    }
+   },
+   "filter": {
+    "term": {
+     "licensee": 34
+    }
+   }
+  }
+ }
+}
+
+# Search with QUERY_STRING and FILTER
+GET http://localhost:8000/booking/_search
+Content-Type: application/json
+
+{
+ "query": {
+  "bool": {
+   "must": {
+    "query_string": {
+     "query": "john*"
+    }
+   },
+   "filter": {
+    "term": {
+     "licensee": 34
+    }
+   }
+  }
+ }
+}
+
+# Search email with MATCH PHRASE PREFIX
+GET http://localhost:8000/booking/_search
+Content-Type: application/json
+
+{
+ "query": {
+  "match_phrase_prefix": {
+   "email": "jen"
+  }
+ }
+}
+
+# Search with QUERY STRING
+# Promising: Gets all columns, allows '*', but does not group results
+GET http://localhost:8000/booking/_search
+Content-Type: application/json
+
+{
+ "query": {
+  "query_string": {
+   "query": "jen*"
+  }
+ }
+}
+
+# Search with WILDCARDS - should not use leading '*'
+POST http://localhost:8000/booking/_search
+Content-Type: application/json
+
+{
+ "query":
+  {
+    "wildcard":
+    {
+     "email": "jen*"
+    }
+  }
+}
+
+# Search TERMS
+POST http://localhost:8000/booking/_search
+Content-Type: application/json
+
+{
+ "query":
+  {
+    "term":
+    {
+     "email": "john"
+    }
+  }
+}
+
 # Add a booking to the index
 POST http://localhost:8000/booking/_doc?pretty
 Content-Type: application/json
@@ -50,27 +259,6 @@ Content-Type: application/json
   "itinerary":"Seoul tour",
   "branch":"HQ",
   "licensee":1
-}
-
-# Searching with MATCH
-GET http://localhost:8000/booking/_search
-Content-Type: application/json
-
-{
-	"query": {"match": {"all_fields": "jon"} }
-
-}
-
-# Searching with MATCH and more fields
-GET http://localhost:8000/booking/_search
-Content-Type: application/json
-
-{
- "query": {
-  "match": {
-   "_all": "jon"
-   }
-  }
 }
 
 # Add a booking at index 2
@@ -94,33 +282,6 @@ Content-Type: application/json
 # Get a booking at index 1
 GET http://localhost:8000/booking/_doc/1?pretty
 
-# Search with MULTI MATCH
-GET http://localhost:8000/booking/_search
-Content-Type: application/json
-
-{
- "query": {
-  "multi_match": {
-   "query": "mckitrick tstllc.net",
-   "fields": ["email"]
-  }
- }
-}
-
-# Search with WILDCARDS
-POST http://localhost:8000/booking/_search
-Content-Type: application/json
-
-{
- "query":
-  {
-    "wildcard":
-    {
-     "email": "*jonathan*"
-    }
-  }
-}
-
 # Bulk create
 POST http://localhost:8000/booking/_doc/_bulk
 Content-Type: application/x-ndjson
@@ -132,7 +293,7 @@ Content-Type: application/x-ndjson
 DELETE http://localhost:8000/booking
 
 # ADD A MAPPING FOR ALL
-PUT http://localhost:8000/booking2
+PUT http://localhost:8000/booking
 Content-Type: application/json
 
 {
@@ -184,7 +345,7 @@ Content-Type: application/json
  }
 }
 
-# Add a booking to the index TWO
+# Add a booking to the OTHER index
 POST http://localhost:8000/booking2/_doc?pretty
 Content-Type: application/json
 
@@ -204,7 +365,7 @@ Content-Type: application/json
 
 
 # NEW ENDPOINT IN ADMIN
-GET http://localhost:9000/admin/bookings/quicksearch?target=tiffany
+GET http://localhost:9000/admin/bookings/quicksearch?target=foo
 
 # REINDEX
 POST http://localhost:8000/_reindex
@@ -217,7 +378,7 @@ POST http://localhost:8000/_reindex
   }
 }
 
-# ADD A MAPPING FOR _ALL
+# ADD A MAPPING FOR ALL_FIELDS
 PUT http://localhost:8000/booking/_mapping/_doc
 Content-Type: application/json
 
@@ -266,11 +427,11 @@ Content-Type: application/json
    }
 }
 
-# DELETE an entire index
+# DELETE entire index - 2
 DELETE http://localhost:8000/booking2
 
 
-# ADD A MAPPING FOR _ALL - ERROR?
+# ADD A MAPPING FOR _ALL on 2
 PUT http://localhost:8000/booking2
 Content-Type: application/json
 
@@ -280,6 +441,26 @@ Content-Type: application/json
    "_all": {
     "enabled": true
    }
+  }
+ }
+}
+
+# DYNAMIC TEMPLATES
+PUT http://localhost:8000/booking
+Content-Type: application/json
+
+{
+ "mappings": {
+  "_doc": {
+   "dynamic_templates": [{
+     "strings": {
+       "match_mapping_type": "string",
+       "mapping": {
+         "type": "text",
+         "copy_to": "catch_all"
+       }
+     }
+   }]
   }
  }
 }
