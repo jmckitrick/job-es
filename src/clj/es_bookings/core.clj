@@ -37,11 +37,9 @@
   (let [{:keys [input-ch output-ch]} (s/bulk-chan c {:flush-threshold 100
                                                      :flush-interval 5000
                                                      :max-concurrent-requests 1000})]
-    (doseq [row-set (partition-all 1000 rows)]
-      (doseq [idx (range 0 (count row-set))]
-        (let [row (nth row-set idx)
-              ready-row (assoc row :type (get-booking-type row))]
-          (async/>!! input-ch [{:index {:_index :booking :_type :_doc :_id (:id row)}} ready-row]))))
+    (doseq [row rows]
+      (let [ready-row (assoc row :type (get-booking-type row))]
+        (async/>!! input-ch [{:index {:_index :booking :_type :_doc :_id (:id row)}} ready-row])))
     (future (loop [] (async/<!! output-ch)))))
 
 (defn -main []

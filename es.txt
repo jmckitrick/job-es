@@ -28,9 +28,7 @@ Content-Type: application/json
 {
  "query":
   {
-   "match_all":
-   {
-   }
+   "match_all": {}
   }
 }
 
@@ -43,13 +41,13 @@ Content-Type: application/json
   "bool": {
    "must": [
     { "match_all": {} }
- ],
- "filter": {
-  "term": {
-   "email": "jon"
+   ],
+   "filter": {
+    "term": {
+     "email": "jon"
+    }
+   }
   }
- }
- }
  }
 }
 
@@ -113,11 +111,11 @@ GET http://localhost:8000/booking/_search
 Content-Type: application/json
 
 {
-	"query": {"match": {"catch_all": "jon"} }
-
+ "query": {"match": {"catch_all": "jon"} }
 }
 
 # Searching with NAMED BOOL QUERY
+# can use 'match' or 'match_phrase_prefix'
 GET http://localhost:8000/booking/_search
 Content-Type: application/json
 
@@ -125,9 +123,9 @@ Content-Type: application/json
  "query": {
   "bool": {
    "should": [
-   { "match": {"agent": {"query": "john", "_name": "agent-MATCH" }}},
-   { "match": {"email": {"query": "john", "_name": "email-MATCH" }}},
-   { "match": {"fname": {"query": "john", "_name": "fname-MATCH" }}},
+   { "match_phrase_prefix": {"agent": {"query": "john", "_name": "agent-MATCH" }}},
+   { "match_phrase_prefix": {"email": {"query": "john", "_name": "email-MATCH" }}},
+   { "match_phrase_prefix": {"fname": {"query": "john", "_name": "fname-MATCH" }}},
    { "match": {"lname": {"query": "john", "_name": "lname-MATCH" }}}
    ]
   }
@@ -142,7 +140,7 @@ Content-Type: application/json
  "query": {
   "multi_match": {
    "query": "john",
-   "fields": ["email","*name","agent"]
+   "fields": ["email", "*name", "agent"]
   }
  }
 }
@@ -158,27 +156,6 @@ Content-Type: application/json
     "multi_match": {
      "query": "john",
      "fields": ["email","*name","agent"]
-    }
-   },
-   "filter": {
-    "term": {
-     "licensee": 34
-    }
-   }
-  }
- }
-}
-
-# Search with QUERY_STRING and FILTER
-GET http://localhost:8000/booking/_search
-Content-Type: application/json
-
-{
- "query": {
-  "bool": {
-   "must": {
-    "query_string": {
-     "query": "john*"
     }
    },
    "filter": {
@@ -215,18 +192,37 @@ Content-Type: application/json
  }
 }
 
+# Search with QUERY_STRING and FILTER
+GET http://localhost:8000/booking/_search
+Content-Type: application/json
+
+{
+ "query": {
+  "bool": {
+   "must": {
+    "query_string": {
+     "query": "john*"
+    }
+   },
+   "filter": {
+    "term": {
+     "licensee": 34
+    }
+   }
+  }
+ }
+}
+
 # Search with WILDCARDS - should not use leading '*'
 POST http://localhost:8000/booking/_search
 Content-Type: application/json
 
 {
- "query":
-  {
-    "wildcard":
-    {
-     "email": "jen*"
-    }
+ "query": {
+  "wildcard": {
+   "email": "jen*"
   }
+ }
 }
 
 # Search TERMS
