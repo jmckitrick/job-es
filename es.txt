@@ -100,7 +100,8 @@ Content-Type: application/json
    "fields": {
     "email": {},
     "fname": {},
-    "lname": {}
+    "lname": {},
+    "agent": {}
    }
   }
 }
@@ -142,7 +143,22 @@ Content-Type: application/json
    "query": "john",
    "fields": ["email", "*name", "agent"]
   }
- }
+ },
+ "highlight": {
+  "fields": {
+  "adapter": {},
+  "email": {},
+  "*name": {},
+  "ref": {},
+  "phone": {},
+  "type": {},
+  "agent": {},
+  "subsite": {},
+  "product": {},
+  "branch": {},
+  "itinerary": {}
+   }
+   }
 }
 
 # Search with MULTI MATCH and FILTER
@@ -192,6 +208,37 @@ Content-Type: application/json
  }
 }
 
+# Search with QUERY STRING and HIGHLIGHT
+# Promising: Gets all columns, allows '*'
+GET http://localhost:8000/booking/_search
+Content-Type: application/json
+
+{
+ "query": {
+  "query_string": {
+   "query": "*jon*"
+  }
+ },
+ "highlight": {
+  "fields": {
+   "adapter": {},
+   "email": {},
+   "*name": {},
+   "ref": {},
+   "phone": {},
+   "type": {},
+   "agent": {},
+   "subsite": {},
+   "product": {},
+   "branch": {},
+   "itinerary": {}
+  }
+ }
+}
+
+# NEW ENDPOINT IN ADMIN
+GET http://localhost:9000/admin/bookings/quicksearch?target=foo
+
 # Search with QUERY_STRING and FILTER
 GET http://localhost:8000/booking/_search
 Content-Type: application/json
@@ -234,9 +281,33 @@ Content-Type: application/json
   {
     "term":
     {
-     "email": "john"
+     "type": "agent"
     }
   }
+}
+
+# Search with BOOL TERMS
+# Best for enumerated fields
+POST http://localhost:8000/booking/_search
+Content-Type: application/json
+
+{
+ "query": {
+  "bool": {
+   "must": [
+   {
+    "term": {
+     "type": "web"
+    }
+   },
+   {
+    "term": {
+     "product": "hotel"
+    }
+   }
+  ]
+ }
+ }
 }
 
 # Add a booking to the index
@@ -353,12 +424,11 @@ Content-Type: application/json
   "fname":"Jared",
   "lname":"Rowland",
   "phone":"6095551212",
-  "email":"bigtimejr81@gmail.com",
+  "email":"bigtimejr1892@gmail.com",
   "itinerary":"Seoul tour",
   "branch":"HQ",
   "licensee":1
 }
-
 
 # NEW ENDPOINT IN ADMIN
 GET http://localhost:9000/admin/bookings/quicksearch?target=foo
