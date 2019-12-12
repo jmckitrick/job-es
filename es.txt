@@ -259,7 +259,7 @@ Content-Type: application/json
 {
  "query": {
   "query_string": {
-   "query": "web"
+   "query": "jon*"
   }
  },
  "highlight": {

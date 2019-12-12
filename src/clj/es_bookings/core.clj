@@ -53,9 +53,11 @@
                                ready-row]))))
     (future (loop [] (async/<!! output-ch)))))
 
-(defn -main []
-  (let [bookings (get-travel-bookings {:start_date "2019-01-01 00:00:00"
-                                       :end_date "2019-02-01 00:00:00"})]
+(defn -main [year start-month end-month]
+  (let [start-date (str year "-" start-month "-01 00:00:00")
+        end-date (str year "-" end-month "-01 00:00:00")
+        bookings (get-travel-bookings {:start_date start-date
+                                       :end_date end-date})]
     (println "Bookings: " (count bookings))
     #_(println "Bookings: " bookings)
     (add-to-index-bulk-async bookings)))
