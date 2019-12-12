@@ -6,6 +6,9 @@ PUT http://localhost:8000/booking?pretty
 # Version check
 GET http://localhost:8000
 
+# Version check
+GET http://nodes.lower.kube.tstllc.net:32200
+
 # Health check
 GET http://localhost:8000/_cat/health?v
 
@@ -13,7 +16,7 @@ GET http://localhost:8000/_cat/health?v
 GET http://localhost:8000/_cat/indices
 
 # Search lite
-GET http://localhost:8000/booking/_search?q=john*
+GET http://localhost:8000/booking/_search?q=myitinerary
 
 # Search lite
 GET http://localhost:8000/booking/_search?q=seoul
@@ -22,7 +25,8 @@ GET http://localhost:8000/booking/_search?q=seoul
 GET http://localhost:8000/booking/_search?q=*&pretty
 
 # Search using JSON body and match_all
-GET http://localhost:8000/booking/_search
+#GET http://localhost:8000/booking/_search
+GET http://nodes.lower.kube.tstllc.net:32200/booking/_search
 Content-Type: application/json
 
 {
@@ -203,7 +207,7 @@ Content-Type: application/json
 {
  "query": {
   "query_string": {
-   "query": "jen*"
+   "query": "J110A9039E9*"
   }
  }
 }
@@ -216,28 +220,61 @@ Content-Type: application/json
 {
  "query": {
   "query_string": {
-   "query": "*jon*"
+   "query": "J* AND licensee:1"
   }
  },
  "highlight": {
   "fields": {
-   "adapter": {},
-   "email": {},
-   "*name": {},
-   "ref": {},
-   "phone": {},
-   "type": {},
-   "agent": {},
-   "subsite": {},
-   "product": {},
-   "branch": {},
-   "itinerary": {}
+   "*": {}
   }
- }
+ },
+ "size": 100
+}
+
+# Search with QUERY STRING and HIGHLIGHT
+# Promising: Gets all columns, allows '*'
+# Experiment with size and start position
+GET http://localhost:8000/booking/_search
+Content-Type: application/json
+
+{
+ "query": {
+  "query_string": {
+   "query": "J*"
+  }
+ },
+ "highlight": {
+  "fields": {
+   "*": {}
+  }
+ },
+ "from": 10,
+ "size": 100
+}
+
+# Same as above, without local port forwarding.
+GET http://nodes.lower.kube.tstllc.net:32200/booking/_search
+Content-Type: application/json
+
+{
+ "query": {
+  "query_string": {
+   "query": "web"
+  }
+ },
+ "highlight": {
+  "fields": {
+   "*": {}
+  }
+ },
+ "size": 100
 }
 
 # NEW ENDPOINT IN ADMIN
-GET http://localhost:9000/admin/bookings/quicksearch?target=foo
+GET http://localhost:9000/admin/bookings/quicksearch?target=jon
+
+# NEW ENDPOINT IN ADMIN
+GET https://admin.dev.infra.tstllc.net/admin/bookings/quicksearch?target=ZOUoXi3TC2YYo4v_Uz_sQ&licenseeId=3
 
 # Search with QUERY_STRING and FILTER
 GET http://localhost:8000/booking/_search
@@ -248,12 +285,12 @@ Content-Type: application/json
   "bool": {
    "must": {
     "query_string": {
-     "query": "john*"
+     "query": "jon*"
     }
    },
    "filter": {
     "term": {
-     "licensee": 34
+     "licensee": 2
     }
    }
   }
@@ -319,10 +356,10 @@ Content-Type: application/json
   "adapter":"Softvoyage",
   "agent":"dave.lovely@tstllc.net",
   "ref_conf_number":"4321XYZ",
-  "fname":"Jared",
-  "lname":"Rowland",
+  "fname":"Henry",
+  "lname":"Rollins",
   "phone":"6095551212",
-  "email":"bigtimejr81@gmail.com",
+  "email":"liar@gmail.com",
   "itinerary":"Seoul tour",
   "branch":"HQ",
   "licensee":1
@@ -421,17 +458,14 @@ Content-Type: application/json
   "adapter":"Softvoyage",
   "agent":"dave.lovely@tstllc.net",
   "ref_conf_number":"4321XYZ",
-  "fname":"Jared",
-  "lname":"Rowland",
+  "fname":"Henry",
+  "lname":"Rollins",
   "phone":"6095551212",
-  "email":"bigtimejr1892@gmail.com",
+  "email":"liar@gmail.com",
   "itinerary":"Seoul tour",
   "branch":"HQ",
   "licensee":1
 }
-
-# NEW ENDPOINT IN ADMIN
-GET http://localhost:9000/admin/bookings/quicksearch?target=foo
 
 # REINDEX
 POST http://localhost:8000/_reindex
@@ -530,3 +564,35 @@ Content-Type: application/json
   }
  }
 }
+
+TripItemTraveler(
+YdKgBXPvQVGE-ebWyTePrQ,
+TravelerDescriptor(
+List(
+Descriptor(
+None,None,false,false,false),
+Descriptor(None,Some(header.contact),false,true,None),
+Descriptor(None,None))),
+List(Field(Descriptor(None,None,false,false,false),
+PersonalInfo(None,Jonathon,None,McKitrick,None)),
+Field(Descriptor(None,Some(header.contact),false,true,None),
+ContactInfo(false,Phone,jonathon.mckitrick@tstllc.net,Some((770) 555-1212),None,None,None)),
+Field(Descriptor(None,None),Address(2101 Pond Fork Drive,None,Charleston,Some(WV),25312,US))),
+{"personalInfo":{"firstName":"Jonathon","lastName":"McKitrick"},"contactInfo":{"isSameAsPrimary":false,"contactMethod":"Phone","email":"jonathon.mckitrick@tstllc.net","phone":"(770) 555-1212"},"address":{"address1":"2101 Pond Fork Drive","city":"Charleston","state":"WV","postal":"25312","country":"US"},"index":0})
+
+url --header "Content-Type: application/json" \
+--request GET \
+--data '{
+ "query": {
+  "query_string": {
+   "query": "J* AND licensee:1"
+  }
+ },
+ "highlight": {
+  "fields": {
+   "*": {}
+  }
+ },
+ "size": 100
+}' \
+http://nodes.lower.kube.tstllc.net:32200/booking/_search
