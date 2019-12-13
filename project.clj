@@ -7,7 +7,7 @@
                  [mysql/mysql-connector-java "5.1.40"]
                  [yesql "0.5.3"]
                  ;;[com.draines/postal "2.0.3"]
-                 [cc.qbits/spandex "0.7.0"]
+                 [cc.qbits/spandex "0.7.3"]
                  [hiccup "1.0.5"]]
   :main es-bookings.core
   :aot [es-bookings.core]

@@ -220,7 +220,7 @@ Content-Type: application/json
 {
  "query": {
   "query_string": {
-   "query": "J* AND licensee:1"
+   "query": "John D* AND licensee:1"
   }
  },
  "highlight": {
@@ -565,27 +565,45 @@ Content-Type: application/json
  }
 }
 
-TripItemTraveler(
-YdKgBXPvQVGE-ebWyTePrQ,
-TravelerDescriptor(
-List(
-Descriptor(
-None,None,false,false,false),
-Descriptor(None,Some(header.contact),false,true,None),
-Descriptor(None,None))),
-List(Field(Descriptor(None,None,false,false,false),
-PersonalInfo(None,Jonathon,None,McKitrick,None)),
-Field(Descriptor(None,Some(header.contact),false,true,None),
-ContactInfo(false,Phone,jonathon.mckitrick@tstllc.net,Some((770) 555-1212),None,None,None)),
-Field(Descriptor(None,None),Address(2101 Pond Fork Drive,None,Charleston,Some(WV),25312,US))),
-{"personalInfo":{"firstName":"Jonathon","lastName":"McKitrick"},"contactInfo":{"isSameAsPrimary":false,"contactMethod":"Phone","email":"jonathon.mckitrick@tstllc.net","phone":"(770) 555-1212"},"address":{"address1":"2101 Pond Fork Drive","city":"Charleston","state":"WV","postal":"25312","country":"US"},"index":0})
 
-url --header "Content-Type: application/json" \
---request GET \
---data '{
+# url --header "Content-Type: application/json" \
+# --request GET \
+# --data '{
+#  "query": {
+#   "query_string": {
+#    "query": "J* AND licensee:1"
+#   }
+#  },
+#  "highlight": {
+#   "fields": {
+#    "*": {}
+#   }
+#  },
+#  "size": 100
+# }' \
+# http://nodes.lower.kube.tstllc.net:32200/booking/_search
+
+
+# Create an index
+PUT http://localhost:8000/booking-dev?pretty
+
+# List indices
+GET http://localhost:8000/_cat/indices
+
+# DELETE an entire index
+DELETE http://localhost:8000/booking-dev
+
+# Search lite to get all entries
+GET http://localhost:8000/booking-dev/_search?q=*
+
+# Real query
+GET http://localhost:8000/booking-dev/_search
+Content-Type: application/json
+
+{
  "query": {
   "query_string": {
-   "query": "J* AND licensee:1"
+   "query": "Jon* AND licensee:1"
   }
  },
  "highlight": {
@@ -594,5 +612,4 @@ url --header "Content-Type: application/json" \
   }
  },
  "size": 100
-}' \
-http://nodes.lower.kube.tstllc.net:32200/booking/_search
+}
