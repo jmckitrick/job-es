@@ -52,13 +52,18 @@
       (doseq [row row-set]
         (let [ready-row (assoc row
                                :booking_type (get-booking-type row)
-                               :fullName (get-full-name row))]
+                               :full_name (get-full-name row))]
           (async/>!! input-ch [{:index  ;desired ES action
                                 {:_index index ;name of index
                                  :_type :_doc ;add to documents on index
                                  :_id (:id row)}}
                                ready-row]))))
-    (future (loop [] (async/<!! output-ch)))))
+    (future (loop [n 0]
+              (println "N: " n)
+              (if (= n (count rows))
+                n
+                (let [result (async/<!! output-ch)]
+                  (recur (+ n (count (first result))))))))))
 
 (defn -main [env year start-month end-month]
   (let [start-date (str year "-" start-month "-01 00:00:00")
@@ -69,6 +74,6 @@
     (println "Bookings: " (count bookings))
     #_(println "Bookings: " bookings)
     (let [result (add-to-index-bulk-async bookings env)]
-      (println "Imported " (count @result) " chunks.")
+      (println "Imported " @result " chunks.")
       (when (not (empty? *command-line-args*))
         (System/exit 0)))))
