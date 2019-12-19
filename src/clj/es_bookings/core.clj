@@ -10,11 +10,13 @@
   "Get a database connection spec.
   Prefer env variables then fall back to defaults."
   []
-  (let [;;local container
+  (let [
+        ;;local container
         hostname (or (System/getenv "DB_HOST") "127.0.0.1")
         username (or (System/getenv "DB_USER") "root")
         password (or (System/getenv "DB_PASS") "")
-        port 3306]
+        port 3306
+        ]
     {:dbtype "mysql"
      :dbname "book"
      :user username
@@ -38,9 +40,6 @@
          (not-empty (:subsite row))) "agent site"
     :else "web"))
 
-(defn get-full-name [row]
-  (str (:fname row) " " (:lname row)))
-
 (defn add-to-index-bulk-async [rows env]
   (let [c (get-es)
         index (str "booking-" env)
@@ -48,18 +47,17 @@
                                                      :flush-interval 5000
                                                      :max-concurrent-requests 1000})]
     (doseq [row-set (partition-all 1000 rows)]
-      (println "Importing " (count row-set) " to " index)
+      (println "Importing" (count row-set) "to" index)
       (doseq [row row-set]
         (let [ready-row (assoc row
-                               :booking_type (get-booking-type row)
-                               :full_name (get-full-name row))]
+                               :booking_type (get-booking-type row))]
           (async/>!! input-ch [{:index  ;desired ES action
                                 {:_index index ;name of index
                                  :_type :_doc ;add to documents on index
                                  :_id (:id row)}}
                                ready-row]))))
     (future (loop [n 0]
-              (println "N: " n)
+              (println "N:" n)
               (if (= n (count rows))
                 n
                 (let [result (async/<!! output-ch)]
@@ -70,10 +68,10 @@
         end-date (str year "-" end-month "-01 00:00:00")
         bookings (get-travel-bookings {:start_date start-date
                                        :end_date end-date})]
-    (println "Env" env "Start " start-date " End " end-date)
-    (println "Bookings: " (count bookings))
+    (println "Env" env "Start" start-date "End" end-date)
+    (println "Bookings:" (count bookings))
     #_(println "Bookings: " bookings)
     (let [result (add-to-index-bulk-async bookings env)]
-      (println "Imported " @result " chunks.")
+      (println "Imported" @result "records.")
       (when (not (empty? *command-line-args*))
         (System/exit 0)))))

@@ -3,16 +3,13 @@
 SELECT
  tb.id,
  tb.licensee_id licensee,
- tb.product_type product,
- tb.product_sub_type product_sub_type,
  tb.adapter_name adapter,
  tb.agent_name agent,
  tb.subsite_agent_name subsite,
  tb.branch_name branch,
  tb.vendor_confirmation ref,
  tb.itinerary_name itinerary,
- t.first_name fname,
- t.last_name lname,
+ CONCAT(t.first_name, ' ', t.last_name) full_name,
  t.email,
  t.phone
 FROM TRAVEL_BOOKING tb

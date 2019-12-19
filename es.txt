@@ -584,14 +584,15 @@ Content-Type: application/json
 # http://nodes.lower.kube.tstllc.net:32200/booking/_search
 
 
-# Create an index
-PUT http://localhost:8000/booking-dev?pretty
 
 # List indices
 GET http://localhost:8000/_cat/indices
 
 # DELETE an entire index
 DELETE http://localhost:8000/booking-dev
+
+# Create an index
+PUT http://localhost:8000/booking-dev?pretty
 
 # Search lite to get all entries
 GET http://localhost:8000/booking-dev/_search?q=*
@@ -613,3 +614,9 @@ Content-Type: application/json
  },
  "size": 100
 }
+
+# DELETE a document by id
+DELETE http://localhost:8000/booking-dev/_doc/8486
+
+# GET a document by id
+GET http://localhost:8000/booking-dev/_doc/7540
