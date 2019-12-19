@@ -10,13 +10,10 @@
   "Get a database connection spec.
   Prefer env variables then fall back to defaults."
   []
-  (let [
-        ;;local container
-        hostname (or (System/getenv "DB_HOST") "127.0.0.1")
+  (let [hostname (or (System/getenv "DB_HOST") "127.0.0.1")
         username (or (System/getenv "DB_USER") "root")
         password (or (System/getenv "DB_PASS") "")
-        port 3306
-        ]
+        port (or (System/getenv "DB_PORT") 3306)]
     {:dbtype "mysql"
      :dbname "book"
      :user username
