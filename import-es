@@ -17,5 +17,5 @@ DB_PORT=3306
 
 for YEAR in $YEARS; do
   echo "Importing data from $YEAR"
-  lein run $ENV $YEAR 1 12
+  lein run $ENV $YEAR
 done
