@@ -10,7 +10,12 @@ curl -i -XDELETE http\://localhost\:8000/booking-$ENV
 echo
 echo "Done."
 
+DB_HOST=127.0.0.1
+DB_USER=root
+DB_PASS=""
+DB_PORT=3306
+
 for YEAR in $YEARS; do
   echo "Importing data from $YEAR"
-  lein run $ENV $YEAR 1 12
+  lein run $ENV $YEAR
 done

@@ -10,13 +10,10 @@
   "Get a database connection spec.
   Prefer env variables then fall back to defaults."
   []
-  (let [
-        ;;local container
-        hostname (or (System/getenv "DB_HOST") "127.0.0.1")
+  (let [hostname (or (System/getenv "DB_HOST") "127.0.0.1")
         username (or (System/getenv "DB_USER") "root")
         password (or (System/getenv "DB_PASS") "")
-        port 3306
-        ]
+        port (or (System/getenv "DB_PORT") 3306)]
     {:dbtype "mysql"
      :dbname "book"
      :user username
@@ -63,9 +60,9 @@
                 (let [result (async/<!! output-ch)]
                   (recur (+ n (count (first result))))))))))
 
-(defn -main [env year start-month end-month]
-  (let [start-date (str year "-" start-month "-01 00:00:00")
-        end-date (str year "-" end-month "-01 00:00:00")
+(defn -main [env year]
+  (let [start-date (str year "-01-01 00:00:00")
+        end-date (str year "-12-01 00:00:00")
         bookings (get-travel-bookings {:start_date start-date
                                        :end_date end-date})]
     (println "Env" env "Start" start-date "End" end-date)
