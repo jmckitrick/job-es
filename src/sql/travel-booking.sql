@@ -9,7 +9,10 @@ SELECT
  tb.branch_name branch,
  tb.vendor_confirmation ref,
  tb.itinerary_name itinerary,
- CONCAT(t.first_name, ' ', t.last_name) full_name,
+ t.first_name fname,
+ t.middle_name mname,
+ t.last_name lname,
+ CONCAT_WS(' ', t.first_name, t.middle_name, t.last_name) full_name,
  t.email,
  t.phone
 FROM TRAVEL_BOOKING tb

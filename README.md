@@ -1,6 +1,7 @@
 # IMPORT BOOKINGS TO ELASTIC SEARCH JOB
 
 Import selected fields from bookings so Elastic Search has them for the Quicksearch bar.
+Existing data for specified environment is deleted from Elastic Search.
 
 ## REQUIREMENTS
 
