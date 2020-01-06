@@ -2,13 +2,18 @@
 
 ENV=$1
 YEARS="2010 2011 2012 2013 2014 2015 2016 2017 2018 2019"
+MONTHS="1 2 3 4 5 6 7 8 9 10 11 12"
 
 echo "Targeting Elastic Search data for $ENV"
 
-echo "Deleting data...."
-curl -i -XDELETE http\://localhost\:8000/booking-$ENV
-echo
-echo "Done."
+if [ -n "$2" ]; then
+  echo "Keeping data."
+else
+  echo "Deleting data...."
+  curl -i -XDELETE http\://localhost\:8000/booking-$ENV
+  echo
+  echo "Done."
+fi
 
 DB_HOST=127.0.0.1
 DB_USER=root
@@ -17,5 +22,11 @@ DB_PORT=3306
 
 for YEAR in $YEARS; do
   echo "Importing data from $YEAR"
-  lein run $ENV $YEAR
+
+  for MONTH in $MONTHS; do
+    echo "Importing data from month $MONTH"
+    lein run $ENV $YEAR $MONTH
+  done
+
+#  lein run $ENV $YEAR
 done

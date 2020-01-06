@@ -5,7 +5,7 @@
                  [org.clojure/java.jdbc "0.7.11"]
                  [mysql/mysql-connector-java "8.0.18"]
                  [yesql "0.5.3"]
-                 [cc.qbits/spandex "0.7.3"]]
+                 [cc.qbits/spandex "0.7.4"]]
   :main es-bookings.core
   :aot [es-bookings.core]
   :min-lein-version "2.7.0"
