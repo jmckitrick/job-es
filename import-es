@@ -1,32 +1,31 @@
 #!/bin/sh
 
 ENV=$1
-YEARS="2010 2011 2012 2013 2014 2015 2016 2017 2018 2019"
-MONTHS="1 2 3 4 5 6 7 8 9 10 11 12"
+DELETEDATA=$2
 
 echo "Targeting Elastic Search data for $ENV"
 
-if [ -n "$2" ]; then
-  echo "Keeping data."
-else
+if [ -n "$DELETEDATA" ]; then
   echo "Deleting data...."
+  echo "NB: At this time you must have local port 8000"
+  echo "to the targeted elastic search node."
+  # TODO: Use the correct endpoint here.
   curl -i -XDELETE http\://localhost\:8000/booking-$ENV
   echo
   echo "Done."
 fi
 
-DB_HOST=127.0.0.1
-DB_USER=root
-DB_PASS=""
-DB_PORT=3306
+# Default to 'cdev' db.
+export DB_HOST=nodes.nonprod.kube.tstllc.net
+export DB_PORT=32114
+
+# TODO: Get these from secrets.
+export DB_USER=root
+export DB_PASS=kube-aws
+
+YEARS=$(seq 2010 2020)
 
 for YEAR in $YEARS; do
   echo "Importing data from $YEAR"
-
-  for MONTH in $MONTHS; do
-    echo "Importing data from month $MONTH"
-    lein run $ENV $YEAR $MONTH
-  done
-
-#  lein run $ENV $YEAR
+  java -jar app-standalone.jar $ENV $YEAR
 done

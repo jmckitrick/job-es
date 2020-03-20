@@ -14,7 +14,7 @@
         username (or (System/getenv "DB_USER") "root")
         password (or (System/getenv "DB_PASS") "")
         port (or (System/getenv "DB_PORT") 3306)]
-    (println "Using" hostname "as db host.")
+    #_(println "Using" hostname "as db host.")
     {:dbtype "mysql"
      :dbname "book"
      :user username
@@ -27,8 +27,8 @@
 
 (defn get-es "Direct to lower"
   []
-  (s/client {:hosts ["http://localhost:8000"]})
-  #_(s/client {:hosts ["http://nodes.lower.kube.tstllc.net:32200"]}))
+  #_(s/client {:hosts ["http://localhost:8000"]})
+  (s/client {:hosts ["http://nodes.lower.kube.tstllc.net:32200"]}))
 
 (defn get-booking-type [row]
   (cond
@@ -60,8 +60,8 @@
     #_(println)
     (println "Imported all data in batch. Waiting on future.")
     (future (loop [n 0]
-              (println "N:" n)
-              ;;(print ".")
+              #_(println "N:" n)
+              #_(print ".")
               (if (= n (count rows))
                 n
                 (let [result (async/<!! output-ch)]
@@ -77,7 +77,9 @@
     #_(println "Bookings: " bookings)
     (let [result (add-to-index-bulk-async bookings env)]
       (println "Imported" @result "records.")
-      (when (not (empty? *command-line-args*))
+      (println "Exiting")
+      (System/exit 0)
+      #_(when (not (empty? *command-line-args*))
         (System/exit 0)))))
 
 (defn import-bookings
@@ -90,9 +92,13 @@
          end-date (str year "-" (inc (min (read-string month) 12)) "-01 00:00:00")]
      (import-bookings-impl env start-date end-date))))
 
-(defn -main [& rest]
-  (when (not (empty? *command-line-args*))
-    (let [[env year month] *command-line-args*]
+(defn -main
+  "Entry point to import bookings into elastic search.
+  Expects environment name, year, and optional month to import."
+  [& args]
+  (println "Args" args)
+  (when (not (empty? args))
+    (let [[env year month] args]
       (if month
         (import-bookings env year month)
         (import-bookings env year)))
