@@ -3,18 +3,20 @@
   (:require
    [clojure.string :as string]
    [clojure.core.async :as async]
-   [qbits.spandex :as s]
+   [qbits.spandex :as elastic-search]
    [yesql.core :refer [defqueries]]))
+
+(def debug true)
 
 (defn get-db-spec
   "Get a database connection spec.
   Prefer env variables then fall back to defaults."
   []
-  (let [hostname (or (System/getenv "DB_HOST") "127.0.0.1")
+  (let [hostname (or (System/getenv "DB_HOST") "nodes.nonprod.kube.tstllc.net")
         username (or (System/getenv "DB_USER") "root")
-        password (or (System/getenv "DB_PASS") "")
-        port (or (System/getenv "DB_PORT") 3306)]
-    #_(println "Using" hostname "as db host.")
+        password (or (System/getenv "DB_PASS") "kube-aws")
+        port (or (System/getenv "DB_PORT") 32114)]
+    (when debug (println "Using" hostname "as db host."))
     {:dbtype "mysql"
      :dbname "book"
      :user username
@@ -25,47 +27,98 @@
 
 (defqueries "travel-booking.sql" {:connection (get-db-spec)})
 
-(defn get-es "Direct to lower"
+(defn elastic-search-config
+  "Get settings for elastic search connection."
   []
-  #_(s/client {:hosts ["http://localhost:8000"]})
-  (s/client {:hosts ["http://nodes.lower.kube.tstllc.net:32200"]}))
+  (let [host (or (System/getenv "ES_HOST") "localhost")
+        port (or (System/getenv "ES_PORT") 8000)]
+    {:host host
+     :port port}))
 
-(defn get-booking-type [row]
+(defn connect-to-elastic-search
+  "Connect to an elastic search node.
+  This may be a direct connection or a local connection via forwarded port."
+  []
+  (let [{:keys [host port]} (elastic-search-config)]
+    (when debug (println "ElasticSearch host" host "port" port))
+    (elastic-search/client {:hosts [(str "http://" host ":" port)]})))
+
+(defn elastic-search-version
+  [client]
+  (let [result (elastic-search/request client {})
+        version-string (get-in result [:body :version :number])
+        version-pieces (string/split version-string #"\.")
+        version-numbers (map read-string version-pieces)]
+    (first version-numbers)))
+
+(comment
+  (def lower-es-client (connect-to-elastic-search))
+  (elastic-search/request lower-es-client {})
+  (elastic-search-version lower-es-client)
+  )
+
+(defn get-booking-type
+  "Use attributes of BOOKING to determine additional
+  booking type information."
+  [booking]
   (cond
-    (and (empty? (:subsite row))
-         (not-empty (:agent row))) "agent"
-    (and (empty? (:agent row))
-         (not-empty (:subsite row))) "agent site"
+    (and (empty? (:subsite booking))
+         (not-empty (:agent booking))) "agent"
+    (and (empty? (:agent booking))
+         (not-empty (:subsite booking))) "agent site"
     :else "web"))
 
-(defn add-to-index-bulk-async [rows env]
-  (let [c (get-es)
-        index (str "booking-" env)
-        {:keys [input-ch output-ch]} (s/bulk-chan c {:flush-threshold 100
-                                                     :flush-interval 5000
-                                                     :max-concurrent-requests 1024})]
+(defn build-index-command
+  "Create the command to index ROW for this version of ElasticSearch."
+  [index-name row es-version]
+  (let [base-command {:_index index-name ;name of index
+                      :_id (:id row)}]
+    (case es-version
+      6 (assoc base-command :_type :_doc)
+      7 base-command)))
+
+(defn add-to-index-bulk-async
+  "Import ROWS into ElasticSearch index for ENV.
+  Uses the bulk import API to import chunks of data.
+  Asynchronously handle result."
+  [rows env]
+  (let [index-name (str "booking-" env)
+        client (connect-to-elastic-search)
+        es-version (elastic-search-version client)
+        {:keys [input-ch output-ch]} (elastic-search/bulk-chan client {:flush-threshold 100
+                                                                       :flush-interval 5000
+                                                                       :max-concurrent-requests 1024})]
+    (when debug
+      (println "ES" es-version "index-name" index-name))
     (doseq [row-set (partition-all 1000 rows)]
-      ;;(println "Importing" (count row-set) "to" index)
       (doseq [row row-set]
         (let [ready-row (assoc row
-                               :booking_type (get-booking-type row))]
-          #_(println "Inserting....")
-          (async/>!! input-ch [{:index  ;desired ES action
-                                {:_index index ;name of index
-                                 :_type :_doc ;add to documents on index
-                                 :_id (:id row)}}
-                               ready-row]))
-        #_(println "Imported a row"))
-      #_(println "Imported a row set"))
-    #_(println)
+                               :booking_type (get-booking-type row))
+              index-command (build-index-command index-name ready-row es-version)]
+          (async/>!! input-ch [{:index index-command}
+                               ready-row]))))
     (println "Imported all data in batch. Waiting on future.")
-    (future (loop [n 0]
-              #_(println "N:" n)
-              #_(print ".")
-              (if (= n (count rows))
-                n
-                (let [result (async/<!! output-ch)]
-                  (recur (+ n (count (first result))))))))))
+    (future
+      (loop [n 0]
+        (if (> n 0)
+          (println "N:" n))
+        (if (= n (count rows))
+          n
+          (let [[job responses] (async/<!! output-ch)]
+            #_(prn "Job:" job)
+            #_(prn "Responses:" responses)
+            (when (instance? clojure.lang.ExceptionInfo responses)
+              (println "Error during import.")
+              (prn "Responses:" responses))
+            (recur (+ n (count job)))))))))
+
+(comment
+  (def my-bookings (get-travel-bookings {:start_date "2019-02-01 00:00:00" :end_date "2019-02-02 00:00:00"}))
+  (def my-booking (get-travel-bookings {:start_date "2019-02-01 00:00:00" :end_date "2019-02-01 11:00:00"}))
+  ;;(def my-import (import-bookings-impl "cdev" "2019-02-01 00:00:00" "2019-02-02 00:00:00"))
+  (def my-import-count (add-to-index-bulk-async my-bookings "jcm"))
+  (def my-import-count (add-to-index-bulk-async my-booking "jcm"))
+  )
 
 (defn import-bookings-impl [env start-date end-date]
   (let [bookings (get-travel-bookings {:start_date start-date
@@ -78,9 +131,7 @@
     (let [result (add-to-index-bulk-async bookings env)]
       (println "Imported" @result "records.")
       (println "Exiting")
-      (System/exit 0)
-      #_(when (not (empty? *command-line-args*))
-        (System/exit 0)))))
+      (System/exit 0))))
 
 (defn import-bookings
   ([env year]
@@ -96,7 +147,7 @@
   "Entry point to import bookings into elastic search.
   Expects environment name, year, and optional month to import."
   [& args]
-  (println "Args" args)
+  (when debug (println "Args" args))
   (when (not (empty? args))
     (let [[env year month] args]
       (if month
