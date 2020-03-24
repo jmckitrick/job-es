@@ -2,11 +2,12 @@ library identifier: 'jenkins-global-lib'
 
 try {
     kube().
-    pod("kubernetes", "job-report-test-bookings").
+    pod("kubernetes", "job-elastic-search").
     withServiceAccount("jenkins").
+    withGitCrypt().
     withContainer(kube.steps.containerTemplate(
         name: 'schema',
-        image: "docker.infra.tstllc.net/job/job-report-test-bookings:latest",
+        image: "docker.infra.tstllc.net/job/job-es:latest",
         command: 'cat',
         ttyEnabled: true,
         alwaysPullImage: true,
@@ -20,9 +21,9 @@ try {
 
             container('schema') {
                 sh """
-                   echo "Running test bookings report job"
+                   echo "Running elastic search job"
                    cd /app
-                   java -jar app-standalone.jar
+                   sh import-es
                   """
                 notifySuccessful()
             }
@@ -35,9 +36,9 @@ try {
 }
 
 def notifySuccessful() {
-    slackSend channel: "#agent", color: "good", message: "Job: 'job-report-test-bookings' SUCCESSFUL"
+    slackSend channel: "#agent", color: "good", message: "Job: 'job-elastic-search' SUCCESSFUL"
 }
 
 def notifyFailed() {
-    slackSend channel: "#agent", color: "#FF0000", message: "Job: 'job-report-test-bookings' FAILED"
+    slackSend channel: "#agent", color: "#FF0000", message: "Job: 'job-elastic-search' FAILED"
 }
