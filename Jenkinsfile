@@ -31,10 +31,12 @@ try {
                        set +x
                        export DB_USER=\$(grep "^DB_USER" ${WORKSPACE}/kube-deploy/.secrets/${SECRETS}.env | cut -f2 -d=)
                        export DB_PASS=\$(grep "^DB_PASSWORD" ${WORKSPACE}/kube-deploy/.secrets/${SECRETS}.env | cut -f2 -d=)
-                       echo "Using \$DB_USER"
+                       export DB_HOST=${DB_HOST}
+                       export DB_PORT=${DB_PORT}
+                       export ES_HOST=${ES_HOST}
                        echo "Running elastic search job"
                        cd /app
-                       sh import-es cdev
+                       sh import-es ${ENV}
                       """
 
                     notifySuccessful()

@@ -4,12 +4,12 @@ ENV=$1
 DELETEDATA=$2
 
 # Default to 'cdev' db.
-export DB_HOST=nodes.nonprod.kube.tstllc.net
-export DB_PORT=32114
+# export DB_HOST=nodes.nonprod.kube.tstllc.net
+# export DB_PORT=32114
 # export DB_HOST=mysqlread.prod.infra.tstllc.net
 # export DB_PORT=3306
 
-export ES_HOST=nodes.lower.kube.tstllc.net
+# export ES_HOST=nodes.lower.kube.tstllc.net
 export ES_PORT=32200
 # export ES_HOST=nodes.prodint.kube.tstllc.net
 # export ES_PORT=32200
