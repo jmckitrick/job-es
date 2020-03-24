@@ -29,12 +29,12 @@ try {
                 container('schema') {
                     sh """
                        set +x
-                       export DB_USER=\$(grep "^DB_USER" ${WORKSPACE}/kube-deploy/.secrets/${ENV}.env | cut -f2 -d=)
-                       export DB_PASS=\$(grep "^DB_PASSWORD" ${WORKSPACE}/kube-deploy/.secrets/${ENV}.env | cut -f2 -d=)
+                       export DB_USER=\$(grep "^DB_USER" ${WORKSPACE}/kube-deploy/.secrets/${SECRETS}.env | cut -f2 -d=)
+                       export DB_PASS=\$(grep "^DB_PASSWORD" ${WORKSPACE}/kube-deploy/.secrets/${SECRETS}.env | cut -f2 -d=)
                        echo "Using $DB_USER"
-                       #echo "Running elastic search job"
-                       #cd /app
-                       #sh import-es cdev
+                       echo "Running elastic search job"
+                       cd /app
+                       sh import-es cdev
                       """
 
                     notifySuccessful()
