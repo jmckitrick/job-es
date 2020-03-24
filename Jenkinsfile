@@ -17,6 +17,12 @@ try {
         resourceLimitMemory: '1536Mi')).
     node {
 
+        stage('checkout') {
+            dir( 'kube-deploy' ) {
+                gitty().checkout('kube-deploy', 'master')
+            }
+        }
+
         crypt(pods: true, dir: "${WORKSPACE}/kube-deploy" ).unlocked {
             stage('run') {
 
