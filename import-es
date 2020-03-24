@@ -1,32 +1,49 @@
 #!/bin/sh
 
+set +x
+
 ENV=$1
-YEARS="2010 2011 2012 2013 2014 2015 2016 2017 2018 2019"
-MONTHS="1 2 3 4 5 6 7 8 9 10 11 12"
+DELETEDATA=$2
+
+# Default to 'cdev' db.
+export DB_HOST=nodes.nonprod.kube.tstllc.net
+export DB_PORT=32114
+# export DB_HOST=mysqlread.prod.infra.tstllc.net
+# export DB_PORT=3306
+
+export ES_HOST=nodes.lower.kube.tstllc.net
+export ES_PORT=32200
+# export ES_HOST=nodes.prodint.kube.tstllc.net
+# export ES_PORT=32200
+
+# TODO: Get these from secrets.
+export DB_USER=root
+export DB_PASS=kube-aws
+# export DB_USER=support_ro
+# export DB_PASS="1mdsupp0rtp3rs0n!"
+
+if ! nc -z "$ES_HOST" "$ES_PORT"; then
+  echo "Could not connect to ElasticSearch host $ES_HOST:$ES_PORT"
+  exit
+fi
 
 echo "Targeting Elastic Search data for $ENV"
 
-if [ -n "$2" ]; then
-  echo "Keeping data."
-else
+if [ -n "$DELETEDATA" ]; then
   echo "Deleting data...."
-  curl -i -XDELETE http\://localhost\:8000/booking-$ENV
+  ES_URL="http://$ES_HOST:$ES_PORT/booking-$ENV"
+  echo $ES_URL
+  curl -i -XDELETE "$ES_URL"
   echo
   echo "Done."
 fi
 
-DB_HOST=127.0.0.1
-DB_USER=root
-DB_PASS=""
-DB_PORT=3306
+YEARS=$(seq 2018 2020)
 
 for YEAR in $YEARS; do
-  echo "Importing data from $YEAR"
-
+  MONTHS=$(seq 1 12)
   for MONTH in $MONTHS; do
-    echo "Importing data from month $MONTH"
-    lein run $ENV $YEAR $MONTH
+    echo "Importing data from $YEAR $MONTH"
+    java -jar app-standalone.jar $ENV $YEAR $MONTH
   done
-
-#  lein run $ENV $YEAR
 done

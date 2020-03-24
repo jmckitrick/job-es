@@ -1,0 +1,14 @@
+pipeline:
+  docker:
+    image: plugins/docker:17.05
+    file: ./Dockerfile
+    force_tag: true
+    registry: docker.infra.tstllc.net
+    repo: docker.infra.tstllc.net/job/job-es
+    secrets: [ docker_username, docker_password ]
+    storage_driver: overlay
+    tag:
+      - ${DRONE_BRANCH/master/latest}
+      - ${DRONE_BRANCH}.build-${DRONE_BUILD_NUMBER}
+    username: dronebuild
+    password: dronebuild
