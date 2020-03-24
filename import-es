@@ -1,7 +1,5 @@
 #!/bin/sh
 
-set +x
-
 ENV=$1
 DELETEDATA=$2
 

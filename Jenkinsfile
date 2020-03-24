@@ -17,18 +17,27 @@ try {
         resourceLimitMemory: '1536Mi')).
     node {
 
-        stage('run') {
+        crypt(pods: true, dir: "${WORKSPACE}/kube-deploy" ).unlocked {
+            stage('run') {
 
-            container('schema') {
-                sh """
-                   echo "Running elastic search job"
-                   cd /app
-                   sh import-es cdev
-                  """
-                notifySuccessful()
+                container('schema') {
+                    sh """
+                       set +x
+                       export DB_USER=\$(grep "^DB_USER" ${WORKSPACE}/kube-deploy/.secrets/${ENV}.env | cut -f2 -d=)
+                       export DB_PASS=\$(grep "^DB_PASSWORD" ${WORKSPACE}/kube-deploy/.secrets/${ENV}.env | cut -f2 -d=)
+
+                       echo "Running elastic search job"
+                       cd /app
+                       sh import-es cdev
+                      """
+
+                    notifySuccessful()
+                }
+
             }
 
         }
+
     }
 } catch (e) {
     notifyFailed()
