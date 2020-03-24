@@ -10,3 +10,5 @@ pipeline:
     tag:
       - ${DRONE_BRANCH/master/latest}
       - ${DRONE_BRANCH}.build-${DRONE_BUILD_NUMBER}
+    username: dronebuild
+    password: dronebuild
