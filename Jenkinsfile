@@ -23,7 +23,7 @@ try {
                 sh """
                    echo "Running elastic search job"
                    cd /app
-                   sh import-es
+                   sh import-es cdev
                   """
                 notifySuccessful()
             }
