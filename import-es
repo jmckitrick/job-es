@@ -15,8 +15,8 @@ export ES_PORT=32200
 # export ES_PORT=32200
 
 # TODO: Get these from secrets.
-export DB_USER=root
-export DB_PASS=kube-aws
+# export DB_USER=root
+# export DB_PASS=kube-aws
 # export DB_USER=support_ro
 # export DB_PASS="1mdsupp0rtp3rs0n!"
 
