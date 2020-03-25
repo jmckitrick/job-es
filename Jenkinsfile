@@ -29,11 +29,13 @@ try {
                 container('schema') {
                     sh """
                        set +x
-                       export DB_USER=\$(grep "^DB_USER" ${WORKSPACE}/kube-deploy/.secrets/${SECRETS}.env | cut -f2 -d=)
-                       export DB_PASS=\$(grep "^DB_PASSWORD" ${WORKSPACE}/kube-deploy/.secrets/${SECRETS}.env | cut -f2 -d=)
                        export DB_HOST=${DB_HOST}
                        export DB_PORT=${DB_PORT}
+                       export DB_USER=\$(grep "^DB_USER" ${WORKSPACE}/kube-deploy/.secrets/${SECRETS}.env | cut -f2 -d=)
+                       export DB_PASS=\$(grep "^DB_PASSWORD" ${WORKSPACE}/kube-deploy/.secrets/${SECRETS}.env | cut -f2 -d=)
                        export ES_HOST=${ES_HOST}
+                       export START_YEAR=${START_YEAR}
+                       export END_YEAR=${END_YEAR}
                        echo "Running elastic search job"
                        cd /app
                        sh import-es ${ENV}

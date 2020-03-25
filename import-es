@@ -1,33 +1,43 @@
 #!/bin/sh
 
-ENV=$1
-DELETEDATA=$2
+# These settings come from Jenkins
+# but can be set here for testing.
 
 # Default to 'cdev' db.
 # export DB_HOST=nodes.nonprod.kube.tstllc.net
 # export DB_PORT=32114
-# export DB_HOST=mysqlread.prod.infra.tstllc.net
-# export DB_PORT=3306
+# export DB_USER=root
+# export DB_PASS=kube-aws
+
+if [ -z "$DB_HOST" ] || [ -z "$DB_PORT" ] || [ -z "$DB_USER" ] || [ -z "$DB_PASS" ]; then
+  echo "Missing DB settings."
+  exit 1
+fi
 
 # export ES_HOST=nodes.lower.kube.tstllc.net
 export ES_PORT=32200
-# export ES_HOST=nodes.prodint.kube.tstllc.net
-# export ES_PORT=32200
 
-# TODO: Get these from secrets.
-# export DB_USER=root
-# export DB_PASS=kube-aws
-# export DB_USER=support_ro
-# export DB_PASS="1mdsupp0rtp3rs0n!"
+if [ -z "$ES_HOST" ] || [ -z "$ES_PORT" ]; then
+  echo "Missing ElasticSearch settings."
+  exit 1
+fi
 
 if ! nc -z "$ES_HOST" "$ES_PORT"; then
   echo "Could not connect to ElasticSearch host $ES_HOST:$ES_PORT"
   exit
 fi
 
+ENV=$1
+DELETE_DATA=$2
+
+if [ -z "$ENV" ]; then
+  echo "Missing ENV setting."
+  exit 1
+fi
+
 echo "Targeting Elastic Search data for $ENV"
 
-if [ -n "$DELETEDATA" ]; then
+if [ -n "$DELETE_DATA" ]; then
   echo "Deleting data...."
   ES_URL="http://$ES_HOST:$ES_PORT/booking-$ENV"
   echo $ES_URL
@@ -36,7 +46,15 @@ if [ -n "$DELETEDATA" ]; then
   echo "Done."
 fi
 
-YEARS=$(seq 2018 2020)
+# START_YEAR=2018
+# END_YEAR=2020
+
+if [ -z "$START_YEAR" ] || [ -z "$END_YEAR" ]; then
+  echo "Missing start/end year settings."
+  exit 1
+fi
+
+YEARS=$(seq START_YEAR END_YEAR)
 
 for YEAR in $YEARS; do
   MONTHS=$(seq 1 12)
