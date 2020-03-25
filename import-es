@@ -12,6 +12,8 @@
 if [ -z "$DB_HOST" ] || [ -z "$DB_PORT" ] || [ -z "$DB_USER" ] || [ -z "$DB_PASS" ]; then
   echo "Missing DB settings."
   exit 1
+else
+  echo "Importing data from $DB_HOST."
 fi
 
 # export ES_HOST=nodes.lower.kube.tstllc.net
@@ -20,6 +22,8 @@ export ES_PORT=32200
 if [ -z "$ES_HOST" ] || [ -z "$ES_PORT" ]; then
   echo "Missing ElasticSearch settings."
   exit 1
+else
+  echo "Saving data to ElasticSearch node $ES_HOST."
 fi
 
 if ! nc -z "$ES_HOST" "$ES_PORT"; then
@@ -33,9 +37,9 @@ DELETE_DATA=$2
 if [ -z "$ENV" ]; then
   echo "Missing ENV setting."
   exit 1
+else
+  echo "Targeting Elastic Search data for $ENV"
 fi
-
-echo "Targeting Elastic Search data for $ENV"
 
 if [ -n "$DELETE_DATA" ]; then
   echo "Deleting data...."
