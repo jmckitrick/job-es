@@ -80,7 +80,7 @@
 (defn add-to-index-bulk-async
   "Import ROWS into ElasticSearch index for ENV.
   Uses the bulk import API to import chunks of data.
-  Asynchronously handle result."
+  Return a channel to retrieve results."
   [rows env]
   (let [index-name (str "booking-" env)
         client (connect-to-elastic-search)
@@ -98,19 +98,25 @@
           (async/>!! input-ch [{:index index-command}
                                ready-row]))))
     (println "Imported all data in batch. Waiting on future.")
-    (future
-      (loop [n 0]
-        (if (> n 0)
-          (println "N:" n))
-        (if (= n (count rows))
-          n
-          (let [[job responses] (async/<!! output-ch)]
-            #_(prn "Job:" job)
-            #_(prn "Responses:" responses)
-            (when (instance? clojure.lang.ExceptionInfo responses)
-              (println "Error during import.")
-              (prn "Responses:" responses))
-            (recur (+ n (count job)))))))))
+    output-ch))
+
+(defn handle-bulk-results
+  "Get the results from OUTPUT-CH asynchonously
+  and return a future."
+  [rows output-ch]
+  (future
+    (loop [n 0]
+      (if (> n 0)
+        (println "N:" n))
+      (if (= n (count rows))
+        n
+        (let [[job responses] (async/<!! output-ch)]
+          #_(prn "Job:" job)
+          #_(prn "Responses:" responses)
+          (when (instance? clojure.lang.ExceptionInfo responses)
+            (println "Error during import.")
+            (prn "Responses:" responses))
+          (recur (+ n (count job))))))))
 
 (comment
   (def my-bookings (get-travel-bookings {:start_date "2019-02-01 00:00:00" :end_date "2019-02-02 00:00:00"}))
@@ -128,7 +134,8 @@
     (when (> (count bookings) 50000)
       (println "----> OVER 50000!"))
     #_(println "Bookings: " bookings)
-    (let [result (add-to-index-bulk-async bookings env)]
+    (let [output-ch (add-to-index-bulk-async bookings env)
+          result (handle-bulk-results bookings output-ch)]
       (println "Imported" @result "records.")
       (println "Exiting")
       (System/exit 0))))
@@ -148,7 +155,7 @@
   Expects environment name, year, and optional month to import."
   [& args]
   (when debug (println "Args" args))
-  (when (not (empty? args))
+  (when (seq args)
     (let [[env year month] args]
       (if month
         (import-bookings env year month)
