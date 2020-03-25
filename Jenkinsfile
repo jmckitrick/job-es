@@ -36,7 +36,7 @@ try {
                        export ES_HOST=${ES_HOST}
                        export START_YEAR=${START_YEAR}
                        export END_YEAR=${END_YEAR}
-                       echo "Running elastic search job"
+                       echo "Running elastic search job with ENV ${ENV} and SECRETS from ${SECRETS}"
                        cd /app
                        sh import-es ${ENV}
                       """

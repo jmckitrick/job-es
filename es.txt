@@ -626,10 +626,34 @@ GET http://localhost:8000/booking-dev/_doc/7540
 # GET indices
 GET http://nodes.lower.kube.tstllc.net:32200/_cat/indices
 
+# Search lite to get all entries
+GET http://nodes.lower.kube.tstllc.net:32200/booking-blue/_search?q=*&pretty
+
 # DELETE index
-DELETE http://nodes.lower.kube.tstllc.net:32200/booking-prod
+DELETE http://nodes.lower.kube.tstllc.net:32200/booking-cstaging
 
 ################ PROD ########################################
 
 # List indices
 GET http://nodes.prodint.kube.tstllc.net:32200/_cat/indices
+
+# Search lite to get all entries
+GET http://nodes.prodint.kube.tstllc.net:32200/booking/_search?q=*&pretty
+
+# Real query
+GET http://nodes.prodint.kube.tstllc.net:32200/booking-prod/_search
+Content-Type: application/json
+
+{
+ "query": {
+  "query_string": {
+   "query": "*Jon* AND licensee:1"
+  }
+ },
+ "highlight": {
+  "fields": {
+   "*": {}
+  }
+ },
+ "size": 100
+}
