@@ -54,7 +54,7 @@ if [ -z "$START_YEAR" ] || [ -z "$END_YEAR" ]; then
   exit 1
 fi
 
-YEARS=$(seq START_YEAR END_YEAR)
+YEARS=$(seq $((START_YEAR + 0)) $((END_YEAR + 0)))
 
 for YEAR in $YEARS; do
   MONTHS=$(seq 1 12)
