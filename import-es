@@ -24,7 +24,7 @@ fi
 
 if ! nc -z "$ES_HOST" "$ES_PORT"; then
   echo "Could not connect to ElasticSearch host $ES_HOST:$ES_PORT"
-  exit
+  exit 1
 fi
 
 ENV=$1
@@ -54,6 +54,7 @@ if [ -z "$START_YEAR" ] || [ -z "$END_YEAR" ]; then
   exit 1
 fi
 
+# Convert string settings to integers and create range.
 YEARS=$(seq $((START_YEAR + 0)) $((END_YEAR + 0)))
 
 for YEAR in $YEARS; do
