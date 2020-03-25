@@ -13,8 +13,7 @@ if [ -z "$DB_HOST" ] || [ -z "$DB_PORT" ] || [ -z "$DB_USER" ] || [ -z "$DB_PASS
   echo "Missing DB settings."
   exit 1
 else
-  DB_XXX=$(echo "$DB_PASS" | cut -c4-64)
-  echo "Importing data from $DB_HOST $DB_USER $DB_XXX."
+  echo "Importing data from $DB_HOST."
 fi
 
 # export ES_HOST=nodes.lower.kube.tstllc.net
