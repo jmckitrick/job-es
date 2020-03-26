@@ -16,6 +16,9 @@ else
   echo "Importing data from $DB_HOST:$DB_PORT with $DB_USER."
 fi
 
+# TODO: We should be able to build this from CLUSTER
+# but at the moment we do not have a 'nonprod' instance
+# of ElasticSearch. We only have 'lower' and 'prodint'.
 # export ES_HOST=nodes.lower.kube.tstllc.net
 export ES_PORT=32200
 
