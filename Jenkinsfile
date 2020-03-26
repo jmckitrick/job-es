@@ -2,9 +2,9 @@ library identifier: 'jenkins-global-lib'
 
 try {
     kube().
-    pod("kubernetes-aws-${CLUSTER}", "job-elastic-search-${NAMESPACE}").
+    pod("kubernetes-aws-${CLUSTER}", "job-elastic-search-${ENV}").
     withServiceAccount("jenkins").
-    withNamespace(NAMESPACE)
+    withNamespace(ENV).
     withGitCrypt().
     withContainer(kube.steps.containerTemplate(
         name: 'schema',
