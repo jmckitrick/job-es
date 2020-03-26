@@ -2,9 +2,9 @@ library identifier: 'jenkins-global-lib'
 
 try {
     kube().
-    pod("kubernetes-aws-${CLUSTER}", "job-elastic-search-${ENV}").
+    pod("kubernetes-aws-${CLUSTER}", "job-elastic-search-${NAMESPACE}").
     withServiceAccount("jenkins").
-    withNamespace(ENV).
+    withNamespace(NAMESPACE).
     withGitCrypt().
     withContainer(kube.steps.containerTemplate(
         name: 'schema',
@@ -30,6 +30,7 @@ try {
                 container('schema') {
                     sh """
                        set +x
+                       export CLUSTER=${CLUSTER}
                        export DB_HOST=${DB_HOST}
                        export DB_PORT=${DB_PORT}
                        export DB_USER=\$(grep "^DB_USER" ${WORKSPACE}/kube-deploy/.secrets/${SECRETS}.env | cut -f2 -d=)
@@ -37,9 +38,9 @@ try {
                        export ES_HOST=${ES_HOST}
                        export START_YEAR=${START_YEAR}
                        export END_YEAR=${END_YEAR}
-                       echo "Running elastic search job with ENV ${ENV} and SECRETS from ${SECRETS}"
+                       echo "Running elastic search job with CLUSTER ${CLUSTER} NAMESPACE ${NAMESPACE} and SECRETS from ${SECRETS}"
                        cd /app
-                       sh import-es ${ENV}
+                       sh import-es ${NAMESPACE}
                       """
 
                     notifySuccessful()

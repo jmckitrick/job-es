@@ -31,19 +31,19 @@ if ! nc -z "$ES_HOST" "$ES_PORT"; then
   exit 1
 fi
 
-ENV=$1
+NAMESPACE=$1
 DELETE_DATA=$2
 
-if [ -z "$ENV" ]; then
-  echo "Missing ENV setting."
+if [ -z "$NAMESPACE" ]; then
+  echo "Missing NAMESPACE setting."
   exit 1
 else
-  echo "Targeting Elastic Search data for $ENV."
+  echo "Targeting Elastic Search data for $NAMESPACE."
 fi
 
 if [ -n "$DELETE_DATA" ]; then
   echo "Deleting data...."
-  ES_URL="http://$ES_HOST:$ES_PORT/booking-$ENV"
+  ES_URL="http://$ES_HOST:$ES_PORT/booking-$NAMESPACE"
   echo $ES_URL
   curl -i -XDELETE "$ES_URL"
   echo
@@ -65,7 +65,7 @@ for YEAR in $YEARS; do
   MONTHS=$(seq 1 12)
   for MONTH in $MONTHS; do
     echo "Importing data from $YEAR $MONTH."
-    java -jar app-standalone.jar $ENV $YEAR $MONTH
+    java -jar app-standalone.jar $NAMESPACE $YEAR $MONTH
   done
 done
 
