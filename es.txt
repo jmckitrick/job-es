@@ -640,6 +640,9 @@ GET http://nodes.prodint.kube.tstllc.net:32200/_cat/indices
 # Search lite to get all entries
 GET http://nodes.prodint.kube.tstllc.net:32200/booking/_search?q=*&pretty
 
+# DELETE index
+DELETE http://nodes.prodint.kube.tstllc.net:32200/booking-prod
+
 # Real query
 GET http://nodes.prodint.kube.tstllc.net:32200/booking-prod/_search
 Content-Type: application/json

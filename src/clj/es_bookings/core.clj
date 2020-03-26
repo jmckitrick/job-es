@@ -25,6 +25,7 @@
      :port port
      :ssl false}))
 
+;; Create clojure functions from these SQL queries.
 (defqueries "travel-booking.sql" {:connection (get-db-spec)})
 
 (defn elastic-search-config
@@ -71,7 +72,7 @@
 (defn build-index-command
   "Create the command to index ROW for this version of ElasticSearch."
   [index-name row es-version]
-  (let [base-command {:_index index-name ;name of index
+  (let [base-command {:_index index-name
                       :_id (:id row)}]
     (case es-version
       6 (assoc base-command :_type :_doc)
@@ -85,9 +86,15 @@
   (let [index-name (str "booking-" env)
         client (connect-to-elastic-search)
         es-version (elastic-search-version client)
-        {:keys [input-ch output-ch]} (elastic-search/bulk-chan client {:flush-threshold 100
-                                                                       :flush-interval 5000
-                                                                       :max-concurrent-requests 1024})]
+        ;; This library builds a bulk channel to handle
+        ;; many requests concurrently/asynchronously.
+        ;; Data are inserted into INPUT-CH and results
+        ;; are extracted from OUTPUT-CH.
+        {:keys [input-ch output-ch]} (elastic-search/bulk-chan
+                                      client
+                                      {:flush-threshold 100
+                                       :flush-interval 5000
+                                       :max-concurrent-requests 1024})]
     (when debug
       (println "ES" es-version "index-name" index-name))
     (doseq [row-set (partition-all 1000 rows)]
@@ -95,8 +102,7 @@
         (let [ready-row (assoc row
                                :booking_type (get-booking-type row))
               index-command (build-index-command index-name ready-row es-version)]
-          (async/>!! input-ch [{:index index-command}
-                               ready-row]))))
+          (async/>!! input-ch [{:index index-command} ready-row]))))
     (println "Imported all data in batch. Waiting on future.")
     output-ch))
 
@@ -126,21 +132,25 @@
   (def my-import-count (add-to-index-bulk-async my-booking "jcm"))
   )
 
-(defn import-bookings-impl [env start-date end-date]
+(defn import-bookings-impl
+  "Get bookings for ENV between START-DATE and END-DATE.
+  Send them to ElasticSearch via an async bulk channel."
+  [env start-date end-date]
   (let [bookings (get-travel-bookings {:start_date start-date
                                        :end_date end-date})]
     (println "Env" env "Start" start-date "End" end-date)
     (println "Bookings:" (count bookings))
-    (when (> (count bookings) 50000)
+    (when (and (> (count bookings) 50000) debug)
       (println "----> OVER 50000!"))
     #_(println "Bookings: " bookings)
     (let [output-ch (add-to-index-bulk-async bookings env)
           result (handle-bulk-results bookings output-ch)]
       (println "Imported" @result "records.")
-      (println "Exiting")
-      (System/exit 0))))
+      #_(println "Exiting")
+      #_(System/exit 0))))
 
 (defn import-bookings
+  "Build the dates and import bookings for ENV and YEAR."
   ([env year]
    (let [start-date (str year "-01-01 00:00:00")
          end-date (str (inc (read-string year)) "-01-01 00:00:00")]

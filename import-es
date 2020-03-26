@@ -27,7 +27,7 @@ else
 fi
 
 if ! nc -z "$ES_HOST" "$ES_PORT"; then
-  echo "Could not connect to ElasticSearch host $ES_HOST:$ES_PORT"
+  echo "Could not connect to ElasticSearch host $ES_HOST:$ES_PORT."
   exit 1
 fi
 
@@ -38,7 +38,7 @@ if [ -z "$ENV" ]; then
   echo "Missing ENV setting."
   exit 1
 else
-  echo "Targeting Elastic Search data for $ENV"
+  echo "Targeting Elastic Search data for $ENV."
 fi
 
 if [ -n "$DELETE_DATA" ]; then
@@ -64,7 +64,10 @@ YEARS=$(seq $((START_YEAR + 0)) $((END_YEAR + 0)))
 for YEAR in $YEARS; do
   MONTHS=$(seq 1 12)
   for MONTH in $MONTHS; do
-    echo "Importing data from $YEAR $MONTH"
+    echo "Importing data from $YEAR $MONTH."
     java -jar app-standalone.jar $ENV $YEAR $MONTH
   done
 done
+
+echo
+echo "Done."
