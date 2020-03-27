@@ -26,7 +26,7 @@ GET http://localhost:8000/booking/_search?q=*&pretty
 
 # Search using JSON body and match_all
 #GET http://localhost:8000/booking/_search
-GET http://nodes.lower.kube.tstllc.net:32200/booking/_search
+GET http://nodes.lower.kube.tstllc.net:32200/booking-dev/_search
 Content-Type: application/json
 
 {
@@ -627,10 +627,10 @@ GET http://localhost:8000/booking-dev/_doc/7540
 GET http://nodes.lower.kube.tstllc.net:32200/_cat/indices
 
 # Search lite to get all entries
-GET http://nodes.lower.kube.tstllc.net:32200/booking-blue/_search?q=*&pretty
+GET http://nodes.lower.kube.tstllc.net:32200/booking-dev/_search?q=*&pretty
 
 # DELETE index
-DELETE http://nodes.lower.kube.tstllc.net:32200/booking-cstaging
+DELETE http://nodes.lower.kube.tstllc.net:32200/booking-jcm
 
 ################ PROD ########################################
 
