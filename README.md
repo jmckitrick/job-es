@@ -41,7 +41,8 @@ Existing data for specified environment can be deleted from ElasticSearch.
 
 ## REQUIREMENTS
 
-- Permissions for kubernetes `lower` and `kubectl` to access it, if using port forwarding.
+- Permissions for kubernetes `lower` and `kubectl` to access it,
+if using port forwarding.
 - VPN connection and permissions for database access.
 
 
@@ -55,7 +56,8 @@ Install [leiningen][1] per the instructions (4 steps).
 1. Use kubectl to find the elastic search service:
    `kc get po -n search`
 1. Copy the name of one of the pods starting with `elasticsearch-client`.
-1. In a separate terminal, create a tunnel from local port 8000 to the elastic search pod:
+1. In a separate terminal, create a tunnel from local port 8000
+to the elastic search pod:
    `while true; do kc port-forward elasticsearch-client-XXXXXXXXX-ZZZZZ 8000:9200 --namespace=search; done`
 1. Open `import-es` in this project.
 1. Navigate to the connection specs around line 13.

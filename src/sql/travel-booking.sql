@@ -1,5 +1,6 @@
 -- name: get-travel-bookings
 -- Get columns for elastic search from travel bookings.
+-- SQL query compiled to a function.
 SELECT
  tb.id,
  tb.licensee_id licensee,

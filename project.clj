@@ -2,7 +2,6 @@
   :description "Populate elasticsearch from bookings"
   :dependencies [[org.clojure/clojure "1.10.1"]
                  [org.clojure/core.async "1.0.567"]
-                 #_[org.clojure/core.async "0.6.532"]
                  [org.clojure/java.jdbc "0.7.11"]
                  [mysql/mysql-connector-java "8.0.19"]
                  [yesql "0.5.3"]
